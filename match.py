@@ -1,4 +1,5 @@
 from os import system
+from datetime import datetime
 from matchclass import matchstats
 from batting import batting
 from bowling import bowling
@@ -31,17 +32,17 @@ def save(fname,match_stats,bat_stats,bowl_stats):
 def scoreboard(match_stats,bat_stats,bowl_stats):
     if(match_stats['status']=='1st innings'):
         print('\t\t\t',match_stats['1st_innings'])
-    else:
+    elif(match_stats['status']=='2nd innings'):
         print('\t\t\t',match_stats['1st_innings'])
         print('\t\t\t',match_stats['2nd_innings'])
         print('\tTARGET: ',match_stats['target'])
     print('_________________________________________________________________________________________________\n')
-    score_board_format1="\t\t\tBATTING    RUNS    BALLS    4s    6s    S/R     STATUS"
+    score_board_format1=f"\t\t\t{'BATTING':<15}{'RUNS':^10}{'BALLS':^8}{'4s':^7}{'6s':^7}{'S/R':^7}{'STATUS':>9}"
     score_board_format2="\t\t\tBOWLING    OVER    MAIDEN    WICKET    RUNS    ECONOMY"
     print(score_board_format1)
-    score_format="\t\t\t{batsman}\t  {runs}\t   {balls}\t   {4s}\t  {6s}    {S/R}     {status}"
-    score_format_strike="\t\t\t{batsman}*\t  {runs}\t   {balls}\t   {4s}\t  {6s}    {S/R}     {status}"
-    bowl_format="\t\t\t{bowler}\t   {over}\t   {maiden}\t     {wickets}\t       {runs}\t    {econ}"
+    score_format="\t\t\t{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
+    score_format_strike="\t\t       *{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
+    bowl_format="\t\t\t{bowler:<10}{over:^10}{maiden:^8}{wickets:^8}{runs:^8}{econ:>7}"
     #score_format.format(item for item in lis1 )
     for batsman in bat_stats:
         if batsman['strike']:
@@ -105,6 +106,7 @@ def check_result(result,bat,bowl,match):
         won=bat[0]
     elif result=='DRAW':
         result='DRAW MATCH'
+        won=None
     elif result=='LOSE':
         result='{0} WON BY {1} RUNS'.format(bowl[0],(match.target-match.truns-1))
         won=bowl[0]
@@ -266,6 +268,7 @@ def start_match(mcode,team,won_toss,toss,overs):
     tname1=team1[0]
     tname2=team2[0]
     match=matchstats(mcode, tname1, tname2, won_toss, toss, overs)
+    match.match_stats['date_time']=datetime.now().replace(second=0,microsecond=0)
     if won_toss==tname1:
         match.match_stats['status']='1st innings'
         if toss=='BAT':
@@ -277,6 +280,7 @@ def start_match(mcode,team,won_toss,toss,overs):
             bat,striker,nonstriker=go_bat(match,team2)
             bowl,bowler=go_bowl(match,team1)
     if won_toss==tname2:
+        match.match_stats['status']='1st innings'
         if toss=='BAT':
             match.set_score('score1','1st_innings',tname2)
             bat,striker,nonstriker=go_bat(match,team2)
@@ -289,7 +293,7 @@ def start_match(mcode,team,won_toss,toss,overs):
     stats.append(match.match_stats)
     stats.append(bat_stats)
     stats.append(bowl_stats)
-    fname='1innings_'+mcode+'.txt'
+    fname='innings/1innings_'+mcode+'.txt'
     print(fname)
     with open(fname,'wb') as ifile:
         dump(stats,ifile)
@@ -307,7 +311,7 @@ def start_match(mcode,team,won_toss,toss,overs):
     stats.append(match.match_stats)
     stats.append(bat_stats)
     stats.append(bowl_stats)
-    fname='2innings_'+mcode+'.txt'
+    fname='innings/2innings_'+mcode+'.txt'
     print(fname)
     with open(fname,'wb') as ifile:
         dump(stats,ifile)

@@ -4,14 +4,15 @@ from match import start_match
 from os import system
 import time
 mcode=''
+symbol='*'
 def scoreboard(match_stats,bat_stats,bowl_stats):
     print('_________________________________________________________________________________________________\n')
-    score_board_format1="\t\t\tBATTING    RUNS    BALLS    4s    6s    S/R     STATUS"
+    score_board_format1=f"\t\t\t{'BATTING':<15}{'RUNS':^10}{'BALLS':^8}{'4s':^7}{'6s':^7}{'S/R':^7}{'STATUS':>9}"
     score_board_format2="\t\t\tBOWLING    OVER    MAIDEN    WICKET    RUNS    ECONOMY"
     print(score_board_format1)
-    score_format="\t\t\t{batsman}\t  {runs}\t   {balls}\t   {4s}\t  {6s}    {S/R}     {status}"
-    score_format_strike="\t\t\t{batsman}*\t  {runs}\t   {balls}\t   {4s}\t  {6s}    {S/R}     {status}"
-    bowl_format="\t\t\t{bowler}\t   {over}\t   {maiden}\t     {wickets}\t       {runs}\t    {econ}"
+    score_format="\t\t\t{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
+    score_format_strike="\t\t       *{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
+    bowl_format="\t\t\t{bowler:<10}{over:^10}{maiden:^8}{wickets:^8}{runs:^8}{econ:>7}"
     #score_format.format(item for item in lis1 )
     for batsman in bat_stats:
         if batsman['strike']:
@@ -31,15 +32,17 @@ def user():
 	for mcode in mcodes[:len(mcodes)-1]:
 		print('Match Number: ',count)
 		count+=1
-		fname='1innings_'+mcode+'.txt'
+		fname='innings/1innings_'+mcode+'.txt'
 		with open(fname,'rb') as ifile:
 			stats=load(ifile)
 		match_stats1=stats[0]
+		if count>=5:
+			print(match_stats1['date_time'])
 		print('\t\t\t',match_stats1['team1']+' vs '+match_stats1['team2'],'\n')
 		if(match_stats1['status']=='1st innings'):
 			print('\t\t\t',match_stats1['1st_innings'])
 		else:
-			fname='2innings_'+mcode+'.txt'
+			fname='innings/2innings_'+mcode+'.txt'
 			with open(fname,'rb') as ifile:
 				stats=load(ifile)
 			match_stats2=stats[0]
@@ -49,10 +52,12 @@ def user():
 			if(match_stats2['status']=='completed'):
 				print('\t\t\t',match_stats2['result'])
 		print('=================================================================================================\n')
-	num=int(input('\nEnter the Match No. to view:'))
+	num=int(input('\nEnter the Match No. to view(0 to go BACK):'))
 	mcode=mcodes[num-1]
 	ch=1
 	while True:
+		if num==0:
+			break
 		if ch==1:
 			matchview(mcode)
 		elif ch==0:
@@ -67,7 +72,7 @@ def matchview(mcode):
 		print('\t\t\tMATCH LOADING....')  #iDWz
 		time.sleep(2)
 		system('cls')
-		fname='1innings_'+mcode+'.txt'
+		fname='innings/1innings_'+mcode+'.txt'
 		with open(fname,'rb') as ifile:
 			stats=load(ifile)
 		match_stats1,bat_stats1,bowl_stats1=stats
@@ -75,16 +80,17 @@ def matchview(mcode):
 			print('\t\t\t',match_stats1['1st_innings'])
 			scoreboard(match_stats1, bat_stats1, bowl_stats1)
 		else:
-			fname='2innings_'+mcode+'.txt'
+			fname='innings/2innings_'+mcode+'.txt'
 			with open(fname,'rb') as ifile:
 				stats=load(ifile)
 			match_stats2,bat_stats2,bowl_stats2=stats
 			print('\t\t\t',match_stats1['1st_innings'])
 			print('\t\t\t',match_stats2['2nd_innings'],end='')
 			print('\tTARGET: ',match_stats2['target'])
-			print('\n\t\t\t',match_stats1['score1'][0])
+			print('\n\t\t',match_stats1['score1'][0])
 			scoreboard(match_stats1, bat_stats1, bowl_stats1)
-			print('\n\t\t\t',match_stats2['score2'][0])
+			print('=================================================================================================\n')
+			print('\n\t\t',match_stats2['score2'][0])
 			scoreboard(match_stats2, bat_stats2, bowl_stats2)
 			if(match_stats2['status']=='completed'):
 				print('\n\n\t\t\t',match_stats2['result'])
@@ -160,9 +166,8 @@ def create_match():
 			print('PLAYER ',players+1,end=" ")
 			p=input('\t\t\t')
 			team.append(p)
-	fname='team_'+mcode+'.txt'
+	fname='teams/team_'+mcode+'.txt'
 	str_team='\n'.join(team)
-	print(fname)
 	with open(fname,'w') as tfile:
 		tfile.write(str_team)
 	pos=team.index('TEAM')
@@ -170,10 +175,12 @@ def create_match():
 	team1_name=team1[0]
 	team2=team[pos+1:]
 	team2_name=team2[0]
-	print('MATCH CODE=',mcode,'\n\n')
-	print('\t\t\t\t '+team1_name+' vs '+team2_name)
+	system('cls')
+	print('\nMATCH CODE=',mcode,'\n\n')
+	time.sleep(1)
+	print('\t\t\t\t '+f"{team1_name:<6}vs{team2_name:>6}")
 	for i in range(12):
-		print('\t\t\t'+team1[i]+'\t\t\t'+team2[i])
+		print('\t\t\t'+f"{team1[i]:<20}{team2[i]:>20}")
 	won_toss,toss=get_toss(team1_name,team2_name)
 	print(won_toss+' won the toss and choose to'+toss)
 	team=zip(team1,team2)

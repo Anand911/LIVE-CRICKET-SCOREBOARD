@@ -8,31 +8,32 @@ class bowling:
         self.wickets = 0
         self.maiden=0
         self.economy=0.0
-        self.status=True
-        self.balls=0
+        self.status=True #50/5=10 5/5=1 10/5= bumrah: 9overs
+        self.balls=0 
         self.runs_per_over=0
         self.count=1
-        self.prev=False
+        self.prev=False 
 
     def _maiden(self):
         if(self.runs_per_over== 0):
             return True
         else:
             return False
-    def _runs_conceded(self,run):
-        self.runs_conceded+=run
+
+    def _runs_conceded(self,run): #bowler   bowler1             bowler._runs_conceded(2)
+        self.runs_conceded+=run  #bowler.runs_concede+=run
         self.balls+=1
-        self.economy=round(self._economy(),2)
+        self.economy=round(self._economy(),2) #3.44
         self.runs_per_over+=run
         self.overs+=0.1
         if self.count==6:
             if self._maiden():
                 self.maiden+=1
-            self.overs=int(self.overs+0.4)
+            self.overs=int(self.overs+0.4) #0.1 0.2....... 0.6 +0.4 =1.0
             self.runs_per_over=0
             self.count=1
         else:
-            self.count+=1
+            self.count+=1  
         self.stats_change()
         
     def _wickets(self):
@@ -54,7 +55,7 @@ class bowling:
         self.b_stats['runs']=self.runs_conceded
         self.b_stats['econ']=self.economy
         self.b_stats['wickets']=self.wickets
-    def _economy(self):
+    def _economy(self):   
         economy_result = self.runs_conceded/(self.balls/6)
         return economy_result
     

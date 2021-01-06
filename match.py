@@ -4,11 +4,13 @@ from matchclass import matchstats
 from batting import batting
 from bowling import bowling
 from pickle import dump,load
+import time
 t_score=0
 t_wickets=0
 bat_stats=[]
 bowl_stats=[]
 bowl_list=[]
+save_data=[]
 def disp_players(team):
     count=0
     for players in team[1:]:
@@ -58,12 +60,14 @@ def go_bat(match,team):
     print('BATTING ',team[0])
     disp_players(team)
     ch=int(input('\nCHOOSE STRIKER:'))
-    ch1=int(input('CHOOSE NON-STRIKER'))
-    STRIKER=team[ch]
-    NON_STRIKER=team[ch1]
-    bat_temp1=batting(STRIKER)
+    ch1=int(input('CHOOSE NON-STRIKER:'))
+    STRIKER=team[ch] #virat #striker
+    NON_STRIKER=team[ch1] #rohit
+    #creation of strike
+    bat_temp1=batting(STRIKER) 
     bat_temp1.b_stats['strike']=True
     bat_stats.append(bat_temp1.b_stats)
+    #creation of non-strike
     bat_temp2=batting(NON_STRIKER)
     bat_stats.append(bat_temp2.b_stats)
     scoreboard(match.match_stats,bat_stats,bowl_stats)
@@ -73,8 +77,11 @@ def go_bowl(match,team):
     print('BOWLING '+team[0])
     disp_players(team)
     b_ch=int(input('CHOOSE THE BOWLER: '))
+    #creation of bowler
     bowl_temp=bowling(team[b_ch])
+    #bowling object append
     bowl_list.append(bowl_temp)
+    #bowling dict append
     bowl_stats.append(bowl_temp.b_stats)
     scoreboard(match.match_stats,bat_stats,bowl_stats)
     return team,bowl_temp
@@ -89,7 +96,10 @@ def strike_rotate(striker,nonstrike,spos,npos):
     spos=npos
     npos=temp1
     return striker,nonstrike,spos,npos
+
 def choose_bowler(bowl,bowler):
+    bowl=list(bowl)
+    bowl.remove(bowler.bname)
     disp_players(bowl)
     b_ch=int(input('CHOOSE THE BOWLER'))
     for bowlers in bowl_list:
@@ -100,6 +110,7 @@ def choose_bowler(bowl,bowler):
         bowler=bowling(bowl[b_ch])
         bowl_list.append(bowler)
     return bowler
+    
 def check_result(result,bat,bowl,match):
     if result=='WIN':
         result='{0} WON BY {1} WICKETS'.format(bat[0],10-match.twickets)
@@ -118,9 +129,10 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
     with open(fname,'rb+') as ifile:
         stats=load(ifile)
     match_stats,bat_stats,bowl_stats=stats
+    #time.sleep(30)
     for batsman in bat_stats:
         if batsman['status']=='BAT' and batsman['strike']:
-            spos=bat_stats.index(batsman)
+            spos=bat_stats.index(batsman) #batstats-[striker,nonstriker]
                 #print(spos)
         elif batsman['status']=='BAT' and not batsman['strike']:
             npos=bat_stats.index(batsman)
@@ -128,6 +140,7 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
     bat.remove(nonstrike.batsman)
     game=True
     ball_by_ball=[]
+    #time.sleep(30)
     while(over!=tovers):
         for bowlers in bowl_stats:
             if bowlers['bowler']==bowler.bname:
@@ -135,15 +148,32 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
             #print(bpos)
         print('=================================================================================================\n')
         scoreboard(match_stats,bat_stats,bowl_stats)
-        disp_over=over+0.1
+        disp_over=over+0.1 
         for balls in range(6):
-            print('\nENTER THE DATA IN ',round(disp_over,1),'(0,1,2,3,4,5,6,W-Wicket,EXTRAS: Nb-No ball,Wd-wide,Lb-Leg Byes,b-byes): ',end="")
+            print('\nENTER THE DATA IN ',round(disp_over,1),'(0,1,2,3,4,5,6,W-Wicket,EXTRAS: Nb-No ball,Wd-wide,Lb-Leg Byes,b-byes,EXIT): ',end="")
             ch=input()
             while(True):
                 if is_valid(ch):
-                    break
-                else:
-                    ch=input('ENTER A VALID DATA:')
+                    if ch=='EXIT' and balls!=0:
+                        print('You can Exit only in the begining of an over!')
+                    else:
+                        break  
+                ch=input('ENTER A VALID DATA:')
+            #exit by saving Data
+            if ch=='EXIT' and balls==0:
+                save_data=[]
+                save_data.append(match)
+                save_data.append(striker)
+                save_data.append(nonstrike)
+                save_data.append(bowler)
+                match.match_stats['status']=match.match_stats['status']+'(save)'
+                sav='savedData/save_'+match.mcode+'.txt'
+                print(bat_stats)
+                save(fname,match.match_stats,bat_stats,bowl_stats)
+                with open(sav,'wb') as sfile:
+                    dump(save_data,sfile)
+                game=False
+                break
             #extras
             extras=('Nb','Wd','Lb','b')
             while(ch in extras):
@@ -178,6 +208,7 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
                 bat_stats[npos]=nonstrike.b_stats
                 bowl_stats[bpos]=bowler.b_stats
                 save(fname,match.match_stats,bat_stats,bowl_stats)
+                #allout condition
                 if allout:
                     print('=================================================================================================\n')
                     scoreboard(match.match_stats, bat_stats, bowl_stats)
@@ -207,6 +238,7 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
                 bat_stats[npos]=nonstrike.b_stats
             bowl_stats[bpos]=bowler.b_stats
             disp_over=disp_over+0.1
+
             if (round(disp_over-over,1))==0.6:
                 disp_over=over+1
             print('=================================================================================================\n')
@@ -219,6 +251,7 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
             match.update_ball_by(ball_by_ball)
             save(fname,match.match_stats,bat_stats,bowl_stats)
             match_stats=match.match_stats
+            '''if its 2nd innings we have to display runs to win ,target etc'''
             if(match_stats['status']=='2nd innings'):
                 balls_left,runs_to_win=match.calc_balls_left()
                 result=match.result_check(balls_left)
@@ -234,9 +267,11 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
                     game=False
                     break
                 else:
-                    print('\t\t\t{0} NEEDS {1} RUNS OF {2} BALLS!!'.format(bat[0],runs_to_win,balls_left))
+                    match.match_stats['runs_to_win']='{0} NEEDS {1} RUNS OF {2} BALLS!!'.format(bat[0],runs_to_win,balls_left)
+                    print('\t\t\t'+match.match_stats['runs_to_win'])
+                    save(fname,match.match_stats,bat_stats,bowl_stats)
         #after an over
-       
+        
         ball_by_ball.append('|')
         if(not game):
             break
@@ -250,13 +285,13 @@ def innings(match,fname,bat,bowl,tovers,over,striker,nonstrike,bowler):
                     break
             else:
                 bowl_stats.append(bowler.b_stats)
-    if(match_stats['status'])=='1st innings':
+    if(match.match_stats['status'])=='1st innings':
         match.target=match.truns+1
         match.match_stats['target']=match.target
         match.delete_ball_by()
         match.match_stats['status']='2nd innings'
         save(fname,match.match_stats,bat_stats,bowl_stats)
-    elif(match_stats['status'])=='2nd innings':
+    elif(match.match_stats['status'])=='2nd innings':
         match.match_stats['status']='completed'
         match.delete_ball_by()
         save(fname,match.match_stats,bat_stats,bowl_stats)
@@ -267,7 +302,7 @@ def start_match(mcode,team,won_toss,toss,overs):
     team1,team2=zip(*team)
     tname1=team1[0]
     tname2=team2[0]
-    match=matchstats(mcode, tname1, tname2, won_toss, toss, overs)
+    match=matchstats(mcode, tname1, tname2, overs)
     match.match_stats['date_time']=datetime.now().replace(second=0,microsecond=0)
     if won_toss==tname1:
         match.match_stats['status']='1st innings'
@@ -289,32 +324,93 @@ def start_match(mcode,team,won_toss,toss,overs):
             match.set_score('score1','1st_innings',tname1)
             bat,striker,nonstriker=go_bat(match,team1)
             bowl,bowler=go_bowl(match,team2)
-    stats=[]
+    stats=[] #matchstats,batstats-[striker,nonstriker],bowlstats-[bowler]
     stats.append(match.match_stats)
     stats.append(bat_stats)
     stats.append(bowl_stats)
-    fname='innings/1innings_'+mcode+'.txt'
-    print(fname)
+    fname='innings/1innings_'+mcode+'.txt' 
     with open(fname,'wb') as ifile:
         dump(stats,ifile)
     #1st innings
     innings(match,fname, list(bat), bowl, overs,0, striker, nonstriker,bowler)
-    match.score_reset()
     #2nd_innings
-    bat_stats.clear()
-    bowl_stats.clear()
-    stats=[]
-    temp=bat
-    bat,striker,nonstriker=go_bat(match,bowl)
-    bowl,bowler=go_bowl(match,temp)
-    match.set_score('score2','2nd_innings',bat[0])
-    stats.append(match.match_stats)
-    stats.append(bat_stats)
-    stats.append(bowl_stats)
-    fname='innings/2innings_'+mcode+'.txt'
-    print(fname)
-    with open(fname,'wb') as ifile:
-        dump(stats,ifile)
-    innings(match,fname, list(bat), bowl, overs,0, striker, nonstriker,bowler)
+    if match.match_stats['status']=='2nd innings':
+       match.score_reset()
+       bat_stats.clear()
+       bowl_stats.clear()
+       stats=[]
+       temp=bat
+       bat,striker,nonstriker=go_bat(match,bowl)
+       bowl,bowler=go_bowl(match,temp)
+       match.set_score('score2','2nd_innings',bat[0])
+       stats.append(match.match_stats)
+       stats.append(bat_stats)
+       stats.append(bowl_stats)
+       fname='innings/2innings_'+mcode+'.txt'
+       with open(fname,'wb') as ifile:
+           dump(stats,ifile)
+       innings(match,fname, list(bat), bowl, overs,0, striker, nonstriker,bowler)
+
+def remove_bat(team,striker,nonstrike,bat_stats):
+    print(team)
+    for batsman in bat_stats:
+        if batsman['status']=='OUT':
+            team.remove(batsman['batsman'])
+    return team
+
+
+def match_load(mcode,team1,team2):
+    global bat_stats
+    fname='savedData/save_'+mcode+'.txt'
+    with open(fname,'rb') as sfile:
+        save_data=load(sfile)
+        print(save_data)
+    match,striker,nonstrike,bowler=save_data
+    print(match.match_stats)
+    if match.match_stats['status']=='1st innings(save)':
+        match.match_stats['status']='1st innings'
+        fname='innings/1innings_'+mcode+'.txt'
+        with open(fname,'rb') as ifile:
+            bat_stats=load(ifile)[1]
+        if match.match_stats['score1'][0]==team1[0]:
+            bat=team1
+            bowl=team2
+        else:
+            bat=team2
+            bowl=team1
+        innings(match,fname,remove_bat(list(bat),striker, nonstrike, bat_stats), bowl, match.overs,match.match_stats['score1'][3], striker, nonstrike,bowler)
+        if match.match_stats['status']=='2nd innings':
+           match.score_reset()
+           bat_stats.clear()
+           bowl_stats.clear()
+           stats=[]
+           temp=bat
+           bat,striker,nonstriker=go_bat(match,bowl)
+           bowl,bowler=go_bowl(match,temp)
+           match.set_score('score2','2nd_innings',bat[0])
+           stats.append(match.match_stats)
+           stats.append(bat_stats)
+           stats.append(bowl_stats)
+           fname='innings/2innings_'+mcode+'.txt'
+           with open(fname,'wb') as ifile:
+               dump(stats,ifile)
+           innings(match,fname, list(bat), bowl, match.overs,0, striker, nonstriker,bowler)
+    #load from Second innings
+    elif match.match_stats['status']=='2nd innings(save)':
+        match.match_stats['status']='2nd innings'
+        fname='innings/2innings_'+mcode+'.txt'
+        with open(fname,'rb') as ifile:
+            bat_stats=load(ifile)[1]
+        if match.match_stats['score2'][0]==team1[0]:
+            bat=team1
+            bowl=team2
+        else:
+            bat=team2
+            bowl=team1
+        innings(match,fname,list(bat), bowl, match.overs,match.match_stats['score2'][3], striker, nonstrike,bowler)
+         
+
+
+       
 
 

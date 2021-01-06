@@ -7,8 +7,7 @@ class batting:
         self.fours=0
         self.six=0
         self.strikerate=0.0
-        #self.b_stats['batsman']=bname
-        #self.b_stats['status']=
+
 
     def stats_change(self):
         self.b_stats['runs']=self.runs
@@ -31,7 +30,7 @@ class batting:
         return self.strikerate
     
     def rotate_strike(self):
-        self.b_stats['strike']=not self.b_stats['strike']
+        self.b_stats['strike']=not self.b_stats['strike']  #striker:False   1        non-strike:True
 
     def out(self):
         self.balls+=1

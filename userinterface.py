@@ -1,29 +1,11 @@
 from pickle import load
 from randgenrator import rand
-from match import start_match
-from os import system
+from utilis import scoreboard,authenticate,matchview
+from match import start_match,match_load
+from os import system,path,remove
 import time
 mcode=''
-symbol='*'
-def scoreboard(match_stats,bat_stats,bowl_stats):
-    print('_________________________________________________________________________________________________\n')
-    score_board_format1=f"\t\t\t{'BATTING':<15}{'RUNS':^10}{'BALLS':^8}{'4s':^7}{'6s':^7}{'S/R':^7}{'STATUS':>9}"
-    score_board_format2="\t\t\tBOWLING    OVER    MAIDEN    WICKET    RUNS    ECONOMY"
-    print(score_board_format1)
-    score_format="\t\t\t{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
-    score_format_strike="\t\t       *{batsman:<15}{runs:^8}{balls:^8}{4s:^9}{6s:^8}{S/R:^8}{status:>6}"
-    bowl_format="\t\t\t{bowler:<10}{over:^10}{maiden:^8}{wickets:^8}{runs:^8}{econ:>7}"
-    #score_format.format(item for item in lis1 )
-    for batsman in bat_stats:
-        if batsman['strike']:
-            print(score_format_strike.format(**batsman))
-        else:
-            print(score_format.format(**batsman))
-    print('_________________________________________________________________________________________________\n')
-    print(score_board_format2)
-    if bowl_stats is not None:
-        for bowler in bowl_stats:
-            print(bowl_format.format(**bowler))
+
 def user():
 	with open('mcode.txt','r') as mfile:
 		mcodes=mfile.read().split('\n')
@@ -35,8 +17,8 @@ def user():
 		fname='innings/1innings_'+mcode+'.txt'
 		with open(fname,'rb') as ifile:
 			stats=load(ifile)
-		match_stats1=stats[0]
-		if count>=5:
+		match_stats1=stats[0] #1-batting  2-bowling
+		if count>=2:
 			print(match_stats1['date_time'])
 		print('\t\t\t',match_stats1['team1']+' vs '+match_stats1['team2'],'\n')
 		if(match_stats1['status']=='1st innings'):
@@ -54,7 +36,7 @@ def user():
 		print('=================================================================================================\n')
 	num=int(input('\nEnter the Match No. to view(0 to go BACK):'))
 	mcode=mcodes[num-1]
-	ch=1
+	ch=1 
 	while True:
 		if num==0:
 			break
@@ -64,47 +46,6 @@ def user():
 			break
 		ch=int(input('ENTER 1 TO REFRESH 0 TO GO BACK:'))
 	
-def matchview(mcode):
-	system('cls')
-	with open('mcode.txt','r') as mfile:
-		mcodes=mfile.read().split('\n')
-	if mcode in mcodes:
-		print('\t\t\tMATCH LOADING....')  #iDWz
-		time.sleep(2)
-		system('cls')
-		fname='innings/1innings_'+mcode+'.txt'
-		with open(fname,'rb') as ifile:
-			stats=load(ifile)
-		match_stats1,bat_stats1,bowl_stats1=stats
-		if(match_stats1['status']=='1st innings'):
-			print('\t\t\t',match_stats1['1st_innings'])
-			scoreboard(match_stats1, bat_stats1, bowl_stats1)
-		else:
-			fname='innings/2innings_'+mcode+'.txt'
-			with open(fname,'rb') as ifile:
-				stats=load(ifile)
-			match_stats2,bat_stats2,bowl_stats2=stats
-			print('\t\t\t',match_stats1['1st_innings'])
-			print('\t\t\t',match_stats2['2nd_innings'],end='')
-			print('\tTARGET: ',match_stats2['target'])
-			print('\n\t\t',match_stats1['score1'][0])
-			scoreboard(match_stats1, bat_stats1, bowl_stats1)
-			print('=================================================================================================\n')
-			print('\n\t\t',match_stats2['score2'][0])
-			scoreboard(match_stats2, bat_stats2, bowl_stats2)
-			if(match_stats2['status']=='completed'):
-				print('\n\n\t\t\t',match_stats2['result'])
-	else:
-		pass
-def authenticate(uid,pswd):
-	with open('admin.dat','rb') as u_file:
-		creds=load(u_file)
-		if uid is not None:
-			if uid==creds['userid'] and pswd==creds['password']:
-				creds={}
-				return True
-		else:
-			return False
 def get_toss(team1_name,team2_name):
 	print('WHO WON THE TOSS:\n1.'+team1_name+'\n2.'+team2_name)
 	ch=int(input())
@@ -124,11 +65,11 @@ def load_match():
 	mcode=input('Enter the Match code: ')
 	with open('mcode.txt','r') as mfile:
 		mcodes=mfile.read().split('\n')
-		print(mcodes)
-	if mcode in mcodes:
+		fname='savedData/save_'+mcode+'.txt'
+	if mcode in mcodes and path.exists(fname):
 		print('\t\t\tMATCH LOADING....')  #iDWz
 		time.sleep(2)
-		fname='team_'+mcode+'.txt'
+		fname='teams/team_'+mcode+'.txt'
 		with open(fname,'r') as tfile:
 			team=tfile.read().split('\n')
 		pos=team.index('TEAM')
@@ -136,18 +77,13 @@ def load_match():
 		team1_name=team1[0]
 		team2=team[pos+1:]
 		team2_name=team2[0]
-		print('\t\t\t\t '+team1_name+' vs '+team2_name)
+		print('\t\t\t\t '+f"{team1_name:<6}vs{team2_name:>6}")
 		for i in range(12):
-			print('\t\t\t'+team1[i]+'\t\t\t'+team2[i])
-		won_toss,toss=get_toss(team1_name,team2_name)
-		if toss is not None:
-			print(won_toss+' won the toss and choose to '+toss)
-		team=zip(team1,team2)
-		start_match(mcode,team,won_toss,toss,2)
-		#1
-		# continue_match(mcode,team)
+			print('\t\t\t'+f"{team1[i]:<20}{team2[i]:>20}")
+		match_load(mcode,team1,team2)
+		
 	else:
-		print('\t\t\tNo Match Exist')
+		print('\t\t\tNo Match Data Found!!\n')
 
 def create_match():
 	mcode=rand(4)
@@ -161,7 +97,7 @@ def create_match():
 			team.append('TEAM')
 		t=input('\nENTER TEAM NAME: ')
 		team.append(t)
-		print(' ENTER PLAYERS OF TEAM '+t+'(ADD (c) for Captain and (wk) for WicketKeeper) :')
+		print(' ENTER PLAYERS OF TEAM '+t+' (ADD (c) for Captain and (wk) for WicketKeeper) :')
 		for players in range(11):
 			print('PLAYER ',players+1,end=" ")
 			p=input('\t\t\t')
@@ -194,16 +130,25 @@ def delete_match():
 	if mcode in mcodes:
 		ch=input('\nARE YOU SURE YOU WANT TO DELETE THIS MATCH(*ALL THE DATA WILL BE LOST)(y/n):')
 		if ch=='y':
-			fname1='team_'+mcode+'.txt'
-			fname2='1innings_'+mcode+'.txt'
-			fname3='2innings_'+mcode+'.txt'
+			fname1='teams/team_'+mcode+'.txt'
+			fname2='innings/1innings_'+mcode+'.txt'
+			fname3='innings/2innings_'+mcode+'.txt'
 			mcodes.remove(mcode)
 			mcodes_str='\n'.join(mcodes)
 			with open('mcode.txt','w') as mfile:
 				mfile.write(mcodes_str)
+			if path.exists(fname1):
+				remove(fname1)
+			if path.exists(fname2):
+				remove(fname2)
+			if path.exists(fname3):
+				remove(fname3)
 			print('\t\t\tDELETED SUCESSFULLY!!')
 		else:
 			print('\t\t\tMATCH NOT DELETED!!')
+	else:
+		print('NO MATCH EXISTS!!')
+
 def admin():
 	print('\t\t\tADMIN MODE')
 	user=''
@@ -217,13 +162,15 @@ def admin():
 		system('cls')
 		while True:
 			print('\t\t\tADMIN PAGE')
-			print('\t\t\t1.CREATE MATCH\n\t\t\t2.DELETE MATCH\n\t\t\t3.BACK')
+			print('\t\t\t1.CREATE MATCH\n\t\t\t2.LOAD MATCH\n\t\t\t3.DELETE MATCH\n\t\t\t4.BACK')
 			ch=int(input('\t\t\tENTER A CHOICE:'))
 			if(ch==1):
 				create_match()
 			elif ch==2:
-				delete_match()
+				load_match()
 			elif ch==3:
+				delete_match()
+			elif ch==4:
 				break
 	else:
 		print('\t\t\tWRONG CREDENTIALS!!')

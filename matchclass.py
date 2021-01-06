@@ -1,16 +1,14 @@
 innings_format='{team} : {total}/{wickets}  ||  {over}|{overs}\n\t\t\t{ball_by}'
 class matchstats:
     
-    def __init__(self,mcode,team1,team2,won_toss,toss,overs):
-        self.match_stats={'mcode':mcode,'date_time':None,'team1':team1,'team2':team2,'won_toss':won_toss,'toss':toss,'overs':overs,'status':None,'score1':[None,0,0,0,overs,None],'score2':[None,0,0,0,overs,None],'1st_innings':None,'2nd_innings':None}
+    def __init__(self,mcode,team1,team2,overs):
+        self.match_stats={'mcode':mcode,'date_time':None,'team1':team1,'team2':team2,'overs':overs,'status':None,'score1':[None,0,0,0,overs,None],'score2':[None,0,0,0,overs,None],'runs_to_win':None,'1st_innings':None,'2nd_innings':None}
         self.mcode=mcode
         self.team1=team1
         self.team2=team2
         self.truns=0
         self.twickets=0
         self.over=0
-        self.won_toss=won_toss
-        self.toss=toss
         self.overs=overs
         self.score=''
         self.innings=''
